@@ -19,7 +19,7 @@ namespace Connection{
 
 
     //int connected;
-    void getAdress( addrinfo* &res, socklen_t &addr_size, const char* port = "3044"){
+    void getAdress( addrinfo* &res, socklen_t &addr_size, const char* port = "3056"){
 
         addrinfo hints;
 
@@ -85,10 +85,8 @@ namespace Connection{
 
     }*/
 
-    std::pair<bool,char*> recvData(int &m_connection_socket){
+    bool recvData(int &m_connection_socket, char* buff){
         int max_size = m_buff_length*4 +4;
-
-        char buff[m_buff_length *4 +4];
         //recv(m_connection_socket, buff, max_size, 0);
         
         //bool accepted = acceptQuery();
@@ -102,8 +100,9 @@ namespace Connection{
         while(!received_length){
             if(num_recv_chars < 0){
                 std::cout<<"Error or Connection was closed on you"<<std::endl;
-                return std::make_pair(false, buff);
+                return true;
             }else{
+                std::cout<<"before receive"<<std::endl;
                 num_recv_chars += recv(m_connection_socket, buff+num_recv_chars, max_size, 0);
                 //buff.append(tmp_buff);
                 std::string received(buff); 
@@ -111,11 +110,13 @@ namespace Connection{
                 pos = received.find("+");
                 std::cout<<"pos = "<<pos<<std::endl;
                 std::cout<<"string::npos = "<<std::string::npos<<std::endl;
-                if(pos != std::string::npos){
+                if(pos >= 0){
                     std::cout<<"in of"<<std::endl;
-                    std::string length_of_message_s = received.substr(0,pos+1);
+                    std::string length_of_message_s = received.substr(0,pos);
+                    std::cout<<"length_of_message_s = "<<length_of_message_s<<std::endl;
                     received_length = true;
-                    char * length_arr = Helper::string_to_charptr(length_of_message_s);
+                    //char length_arr[m_buff_length *4 +4];
+                    auto length_arr = length_of_message_s.c_str();
                     message_length = atoi(length_arr);
                     std::cout<<"Message length = "<<message_length<<std::endl;
                 }
@@ -127,11 +128,13 @@ namespace Connection{
 
         //Get the whole message
 
-        while(message_length+pos+1 < num_recv_chars){
+        while(message_length+pos+2 < num_recv_chars){
+            std::cout<<"first while arg = "<<message_length+pos+1<<std::endl;
+            std::cout<<"second while arg = "<<num_recv_chars<<std::endl;
 
-            if(num_recv_chars <= 0){
+            if(num_recv_chars < 0){
                 std::cout<<"Error or Connection was closed on you"<<std::endl;
-                return std::make_pair(false, buff);
+                return false;
             }else{
                 num_recv_chars += recv(m_connection_socket, buff+num_recv_chars, max_size, 0);
                 //buff.append(tmp_buff);
@@ -139,15 +142,21 @@ namespace Connection{
 
         }
 
-        return std::make_pair(true, buff);
+        return true;
 
     }
 
-    /*bool sendData(char* data, int data_size){
-
-        send(*m_connection_socket, data, data_size,0);
-
-    }*/
-
+    bool send_all(int &socket, void *buffer, size_t length)
+    {
+        char *ptr = (char*) buffer;
+        while (length > 0)
+        {
+            int i = send(socket, ptr, length, 0);
+            if (i < 1) return false;
+            ptr += i;
+            length -= i;
+        }
+        return true;
+    }
 };
 

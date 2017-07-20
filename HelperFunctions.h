@@ -13,10 +13,14 @@ namespace Helper{
         return sc;
     }
 
-    char* bool_to_charptr(bool b_in){
-        std::string tr("true");
-        std::string fa("false");
-        char* b_out = b_in ? string_to_charptr(tr) : string_to_charptr(fa);
+    std::string bool_to_string(bool b_in){
+        std::string tr("4+true");
+        std::string fa("5+false");
+        std::string b_out;
+        b_out = b_in ? tr : fa;
+        for(int i = 0; i < 10; i++){
+            std::cout<<"b_out = "<<b_out[i]<<std::endl;
+        }
         return b_out;
     }
 

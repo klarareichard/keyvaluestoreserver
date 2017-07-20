@@ -28,14 +28,39 @@ public:
             pair = data_base.getValue(q.getKey());
             success = pair.first; 
             value = pair.second;
-            auto v_char = Helper::string_to_charptr(value);
+            int length = value.length();
+            std::string lengths = std::to_string(length);
+            value = lengths + "+" + value;
+            std::cout<<" send = "<< value<<std::endl;
+            auto v_char = strdup(value.c_str());
+
             send(server,v_char, value.length(), 0);
+            free(v_char);
             
 
         }else if(q.getQueryType() == 1){
-            success = data_base.putKeyValuePair(q.getKey(), q.getValue()); 
+            //char v_char[m_buff_length*4 +4];
+            success = data_base.putKeyValuePair(q.getKey(), q.getValue());
+            std::string key = q.getKey();
+            std::string value(data_base.getValue(key).second);
+            std::cout<<"value of data_base at "<< key<<" = " <<value<<std::endl;
+            auto v_string = Helper::bool_to_string(success);
+            for(int i = 0; i < 10; ++i){
+                std::cout <<"success = "<<v_string[i]<<std::endl;
+            }
+            auto v_char = strdup(v_string.c_str());
+            send(server,v_char, v_string.length(), 0);
+            free(v_char);
         }else{
+            //char v_char[m_buff_length*4 +4];
             success = data_base.deleteKey(q.getKey()); 
+            auto v_string = Helper::bool_to_string(success);
+            auto v_char = strdup(v_string.c_str());
+            for(int i = 0; i < v_string.length(); ++i){
+                std::cout<<"v_char = "<<v_char[i]<<std::endl;
+            }
+            send(server,v_char, v_string.length(), 0);
+            free(v_char);
             if(!success){
                 std::cout<<" Key is not in data base, so it cannot be deleted"<<std::endl;
             }
@@ -59,21 +84,32 @@ public:
             std::cout<<"Server Connection established and Listening"<<std::endl;
         }*/
         //c.makeServerConnection();
+        sockaddr_storage their_addr;
+        int accept_socket = accept(server, (struct sockaddr *)&their_addr, &addr_size);
         while(true){
-            sockaddr_storage their_addr;
-            int accept_socket = accept(server, (struct sockaddr *)&their_addr, &addr_size);
+            //Connection::makeServerConnection(server,res);
+            //accept_socket = accept(server, (struct sockaddr *)&their_addr, &addr_size);
             if(accept_socket == -1){
                 std::cout<<"not accepted"<<std::endl;
+                break;
             }else if(accept_socket >= 0){
-                auto pair = Connection::recvData(accept_socket);
-                bool received = pair.first; 
-                char* data = pair.second;
+                char buff[m_buff_length *4 +4];
+                auto pair = Connection::recvData(accept_socket, buff);
+                std::cout<<"finished reveive data"<<std::endl;
+                bool received = pair; 
+                char* data = buff;
                 if(received){
                     std::string receiveds(data);
+                    std::cout<<"receiveds = "<<receiveds<<std::endl;
                     Query q = Parser::deserialize(receiveds);
-                    handleQuery(q, server);
+                    std::cout<<"after deserialize "<<std::endl;
+                    handleQuery(q, accept_socket);
+                    //sleep(10);
                 }
+
+                //std::cout<<" "
             }
+            //close(accept_socket);
         }
     }
 
