@@ -43,9 +43,7 @@ namespace Parser{
 
         std::string serialization = querytype + "+" + q.getKey() + "+" + q.getValue();
         std::cout<<"serialization = "<<serialization<<std::endl;
-        int length = serialization.length();
-        std::string lengths = std::to_string(length);
-        return (lengths +  "+" + serialization);
+        return serialization;
 
     }
 
@@ -59,14 +57,14 @@ namespace Parser{
            seglist.push_back(segment);
         }
         QueryType qt;
-        std::string key = seglist[2];
+        std::string key = seglist[1];
         std::string value;
-        if(seglist.size() > 3){
-            value = seglist[3];
+        if(seglist.size() > 2){
+            value = seglist[2];
         }else{
             value = std::string();
         }
-        std::string querys = seglist[1];
+        std::string querys = seglist[0];
 
         std::cout<<"querys = "<<querys<<std::endl;
         if(strcmp(querys.c_str(),std::string("Get").c_str()) == 0){

@@ -77,7 +77,7 @@
 static std::string
 s_recv (zmq::socket_t & socket) {
 
-    zmq::message_t message;
+    static zmq::message_t message;
     socket.recv(&message);
 
     return std::string(static_cast<char*>(message.data()), message.size());
@@ -85,12 +85,12 @@ s_recv (zmq::socket_t & socket) {
 
 //  Convert string to 0MQ string and send to socket
 static bool
-s_send (zmq::socket_t & socket, const std::string & string) {
+s_send(zmq::socket_t & socket, const std::string & string) {
 
     zmq::message_t message(string.size());
-    memcpy (message.data(), string.data(), string.size());
+    memcpy(message.data(), string.data(), string.size());
 
-    bool rc = socket.send (message);
+    bool rc = socket.send(message);
     return (rc);
 }
 
@@ -101,7 +101,7 @@ s_sendmore (zmq::socket_t & socket, const std::string & string) {
     zmq::message_t message(string.size());
     memcpy (message.data(), string.data(), string.size());
 
-    bool rc = socket.send (message, ZMQ_SNDMORE);
+    bool rc = socket.send(message, ZMQ_SNDMORE);
     return (rc);
 }
 
@@ -179,7 +179,7 @@ s_set_id(zmq::socket_t & socket, intptr_t id)
 
 //  Report 0MQ version number
 //
-static void
+/*static void
 s_version (void)
 {
     int major, minor, patch;
@@ -199,7 +199,7 @@ s_version_assert (int want_major, int want_minor)
               << " - cannot continue" << std::endl;
         exit (EXIT_FAILURE);
     }
-}
+}*/
 
 //  Return current system clock as milliseconds
 static int64_t

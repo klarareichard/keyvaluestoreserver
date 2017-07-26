@@ -1,5 +1,7 @@
 #include <string>
 #include <stdlib.h>
+#include <zmq.h>
+#include <iostream>
 #pragma once
 //static char* sc;
 namespace Helper{

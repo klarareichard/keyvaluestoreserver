@@ -6,11 +6,12 @@
 #include <netdb.h>
 #include <unordered_map>
 #include <zmq.h> 
-#include "zhelpers.h"
+#include "zhelpers.hpp"
 #include "Query.h"
 #include "Storage.h"
 #include "HelperFunctions.h"
 #include <unistd.h>
+#include "Connection.h"
 
 
 class Server{
@@ -21,7 +22,7 @@ class Server{
         c.~Connection();
     }*/
 public:
-    std::string handleQuery(Query &q){
+    std::string handleQuery(Query &q, zmq::socket_t &server){
         bool success;
         std::pair<bool, std::string> pair;
         std::string value;
@@ -62,17 +63,14 @@ public:
         void *responder = zmq_socket (context, ZMQ_REP);
         int rc = zmq_bind (responder, "tcp://*:5555");
         assert (rc == 0);
-        char world[6] = "World";
+        const char* world = "World";
 
         while (1) {
-            
-            char* buffer = s_recv (responder);
-            Query q = Parser::deserialize(std::string(buffer));
-            auto response = handleQuery(q);
-            char char_response[response.size()]; 
-            strcpy(char_response, response.data());
-            zmq_send (responder, char_response, 50, 0);
-            free(buffer);
+            char buffer [10];
+            zmq_recv (responder, buffer, 10, 0);
+            printf ("Received Hello\n");
+            sleep (1);          //  Do some 'work'
+            zmq_send (responder, world, 5, 0);
         }
             
 

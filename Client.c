@@ -3,29 +3,32 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <zmq.h>
-#include "zhelpers.h"
+#include <zmq.hpp>
+#include "zhelpers.hpp"
 #include <netdb.h>
 #include <unordered_map>
 #include "Query.h"
 #include "Storage.h"
-//#include "HelperFunctions.h"
+#include "Connection.h"
+#include "HelperFunctions.h"
 #include <unistd.h>
 
 namespace Client{
 
-    std::string getValue(const std::string &s){
+    std::string getValue(const std::string &s, zmq::socket_t &send_socket, zmq::message_t &request, zmq::message_t &reply){
         QueryType qt = QueryType::Get;
         Query q(qt,s);
         auto query_string = Parser::serialize(q);
+        Helper::s_send(send_socket, query_string, request);
 
+        std::string value = Helper::s_recv(send_socket, reply);
         std::cout<<"after recv"<<std::endl;
         
-        return query_string;
+        return value;
 
     }
 
-    std::string putKeyValuePair(const std::string &key, const std::string &value){
+    std::string putKeyValuePair(const std::string &key, const std::string &value, zmq::socket_t &send_socket){
 
         QueryType qt = QueryType::Put;
         Query q(qt,key, value);
@@ -37,94 +40,36 @@ namespace Client{
 
     }
 
-    std::string deleteKey(const std::string &key){
+    void deleteKey(const std::string &key, zmq::socket_t &send_socket, zmq::message_t &request, zmq::message_t &reply){
 
         QueryType qt = QueryType::Delete;
         Query q(qt,key);
         std::string query_string = Parser::serialize(q);
-        //std::cout<<"response = "<<response<<std::endl;
-        return query_string;
-    }
+        Helper::s_send(send_socket, query_string, request);
 
-    void run_more_clients(){
-
-        #pragma omp parallel for
-        for(int client_num = 0; client_num < 9; ++client_num){
-            void * context = zmq_ctx_new();
-            void *requester = zmq_socket (context, ZMQ_REQ);
-            zmq_connect (requester, "tcp://localhost:5555");
-
-            std::string key = std::to_string(client_num);
-            std::string value = std::to_string(client_num+1);
-            auto query_string = Client::putKeyValuePair(key,value);
-
-            std::cout<<"query_string = "<<query_string<<std::endl;
-            char query_char[query_string.size()]; 
-            strcpy(query_char, query_string.data());
-
-            s_send (requester, query_char);
-            char *string = s_recv (requester);
-            printf ("Received reply [%s]\n", string);
-            auto rep = std::string(string); 
-            std::cout<<"rep = "<<rep<<std::endl;
-            free (string);
-
-            auto query_string1 = Client::getValue(key);
-            std::cout<<"query_string1 = "<<query_string1<<std::endl;
-            char query_char1[query_string1.size()]; 
-            strcpy(query_char1, query_string1.data());
-
-            s_send (requester, query_char1);
-            char *string1 = s_recv (requester);
-            printf ("Received reply [%s]\n", string1);
-            auto rep1 = std::string(string1); 
-            std::cout<<"rep1 = "<<rep1<<std::endl;
-            free (string1);
-
-            zmq_close(requester);
-            zmq_ctx_destroy(context);
-
-        
-        }
-
+        std::string response = Helper::s_recv(send_socket, reply);
+        std::cout<<"response = "<<response<<std::endl;
     }
 
 };
 
 int main(){
 //  Socket to talk to clients
+
     void *context = zmq_ctx_new ();
 
     //  Socket to talk to server
     void *requester = zmq_socket (context, ZMQ_REQ);
     zmq_connect (requester, "tcp://localhost:5555");
 
-    char hello[6] = "Hello";
-    char world[6] = "World";
-    auto query_string = Client::putKeyValuePair(hello,world);
-    std::cout<<"query_string = "<<query_string<<std::endl;
-    char query_char[query_string.size()]; 
-    strcpy(query_char, query_string.data());
-
-    s_send (requester, query_char);
+    const char* hello = "Hello";
+    s_send (requester, hello);
     char *string = s_recv (requester);
     printf ("Received reply [%s]\n", string);
     free (string);
-
-    auto query_string1 = Client::getValue(hello);
-    std::cout<<"query_string1 = "<<query_string1<<std::endl;
-    char query_char1[query_string1.size()]; 
-    strcpy(query_char1, query_string1.data());
-
-    s_send (requester, query_char1);
-    char *string1 = s_recv (requester);
-    printf ("Received reply [%s]\n", string1);
-    free (string1);
     
     zmq_close (requester);
     zmq_ctx_destroy (context);
-    Client::run_more_clients();
-
     return 0;
 
 
