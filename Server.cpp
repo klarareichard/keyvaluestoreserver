@@ -16,11 +16,14 @@
 class Server{
 
     Storage data_base;
+public:
+    Server(){
+        Storage data_base = Storage();
+    }
 
     /*~Server(){
         c.~Connection();
     }*/
-public:
     std::string handleQuery(Query &q){
         bool success;
         std::pair<bool, std::string> pair;

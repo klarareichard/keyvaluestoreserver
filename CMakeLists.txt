@@ -38,10 +38,10 @@ add_compile_options(-zmq)
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -frounding-math -fPIC  -std=c++11 -O3 -DNDEBUG -march=native -fopenmp")
 
 
-#add_executable(hwclient hwclient.cpp ${GTEST_INCLUDE_DIRS})
-#target_include_directories(hwclient PUBLIC ${ZeroMQ_INCLUDE_DIR})
-#target_link_libraries(hwclient PUBLIC ${GTEST_BOTH_LIBRARIES} pthread ${ZeroMQ_LIBRARY})
-#add_test(AllTestsInTests hwclient)
+add_executable(tests tests.cpp ${GTEST_INCLUDE_DIRS})
+target_include_directories(tests PUBLIC ${ZeroMQ_INCLUDE_DIR})
+target_link_libraries(tests PUBLIC ${GTEST_BOTH_LIBRARIES} pthread ${ZeroMQ_LIBRARY})
+add_test(AllTestsInTests tests)
 
 add_executable(server Server.cpp)
 target_include_directories(server PUBLIC ${ZeroMQ_INCLUDE_DIR})
